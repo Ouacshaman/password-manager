@@ -1,1 +1,2 @@
-Password Manager that utilize SQL with GUI integrated
+Password Manager that utilize SQL
+This is a CLI tool
