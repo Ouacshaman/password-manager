@@ -8,7 +8,7 @@ fn main() {
 
     let arg_entry_pw = args[3].clone();
     let b_pw: &[u8] = arg_entry_pw.as_bytes();
-    let salt = b"test";
+    let salt = b"testing password encryption";
 
     let mut output_key_material = [0u8; 32];
     let _ = Argon2::default().hash_password_into(b_pw, salt, &mut output_key_material);
