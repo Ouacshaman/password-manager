@@ -1,3 +1,5 @@
+// Argon2 package is used to generate a master key
+
 use argon2::{self, Argon2};
 use std;
 
