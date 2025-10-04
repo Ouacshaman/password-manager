@@ -6,7 +6,11 @@ use std;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
+<<<<<<< HEAD
     let arg_entry_pw = &args[1];
+=======
+    let arg_entry_pw = args[1].clone();
+>>>>>>> 49244c5 (stdin added)
     let b_pw: &[u8] = arg_entry_pw.as_bytes();
     let salt = b"testing password encryption";
 
@@ -14,4 +18,22 @@ fn main() {
     let _ = Argon2::default().hash_password_into(b_pw, salt, &mut output_key_material);
 
     println!("{:?}", output_key_material);
+
+    let mut account_name = String::new();
+    let mut pw_entry = String::new();
+
+    println!("Enter the account name or username:");
+    std::io::stdin()
+        .read_line(&mut account_name)
+        .expect("Unable to read account name");
+
+    println!("Enter the associated password:");
+    std::io::stdin()
+        .read_line(&mut pw_entry)
+        .expect("Unable to read password");
+
+    println!(
+        "You've entered {} as the Acc and {} as the PW",
+        account_name, pw_entry
+    )
 }
