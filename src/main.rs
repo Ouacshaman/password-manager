@@ -1,23 +1,19 @@
 // Argon2 package is used to generate a master key
 
-use argon2::{self, Argon2};
+use argon2::Argon2;
 use std;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-<<<<<<< HEAD
     let arg_entry_pw = &args[1];
-=======
-    let arg_entry_pw = args[1].clone();
->>>>>>> 49244c5 (stdin added)
     let b_pw: &[u8] = arg_entry_pw.as_bytes();
     let salt = b"testing password encryption";
 
     let mut output_key_material = [0u8; 32];
     let _ = Argon2::default().hash_password_into(b_pw, salt, &mut output_key_material);
 
-    println!("{:?}", output_key_material);
+    println!("{:?}", &output_key_material);
 
     let mut account_name = String::new();
     let mut pw_entry = String::new();
@@ -33,7 +29,7 @@ fn main() {
         .expect("Unable to read password");
 
     println!(
-        "You've entered {} as the Acc and {} as the PW",
+        "Account Name entered: {}Password entered: {}",
         account_name, pw_entry
-    )
+    );
 }
