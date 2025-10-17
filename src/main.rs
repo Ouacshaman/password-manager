@@ -1,35 +1,50 @@
 // Argon2 package is used to generate a master key
 
 use argon2::Argon2;
-use std;
+use clap::{Parser, Subcommand};
+use sqlx;
 
-fn main() {
-    let args: Vec<String> = std::env::args().collect();
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    #[arg(short, long, value_name = "user_name")]
+    name: Option<String>,
 
-    let arg_entry_pw = &args[1];
+    #[arg(short, long, value_name = "master_password")]
+    master_pw: Option<String>,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    List {
+        #[arg(long)]
+        list: Option<String>,
+    },
+}
+
+#[tokio::main]
+
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let cli = Cli::parse();
+
+    let conn_str =
+        std::env::var("DATABASE_URL").expect("Database Url is not entered into dotenv file");
+
+    let _pool = sqlx::SqlitePool::connect(&conn_str).await?;
+
+    let arg_entry_pw = cli
+        .master_pw
+        .unwrap_or_else(|| "No String Found".to_string());
     let b_pw: &[u8] = arg_entry_pw.as_bytes();
     let salt = b"testing password encryption";
 
     let mut output_key_material = [0u8; 32];
     let _ = Argon2::default().hash_password_into(b_pw, salt, &mut output_key_material);
 
-    println!("{:?}", &output_key_material);
+    println!("{:?}", &output_key_material.to_ascii_lowercase());
 
-    let mut account_name = String::new();
-    let mut pw_entry = String::new();
-
-    println!("Enter the account name or username:");
-    std::io::stdin()
-        .read_line(&mut account_name)
-        .expect("Unable to read account name");
-
-    println!("Enter the associated password:");
-    std::io::stdin()
-        .read_line(&mut pw_entry)
-        .expect("Unable to read password");
-
-    println!(
-        "Account Name entered: {}Password entered: {}",
-        account_name, pw_entry
-    );
+    Ok(())
 }
