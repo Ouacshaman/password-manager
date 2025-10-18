@@ -1047,6 +1047,7 @@ dependencies = [
  "argon2",
  "clap",
  "dotenvy",
+ "rand",
  "sqlx",
  "tokio",
 ]

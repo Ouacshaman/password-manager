@@ -1,8 +1,8 @@
 // Argon2 package is used to generate a master key
 
-use argon2::Argon2;
+use argon2::{Argon2, password_hash::SaltString};
 
-use rand::{RngCore, rngs::OsRng};
+use argon2::password_hash::rand_core::OsRng;
 
 use clap::Parser;
 use dotenvy::dotenv;
@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("{}", conn_str);
 
-    let pool = sqlx::SqlitePool::connect(&conn_str).await?;
+    let _pool = sqlx::SqlitePool::connect(&conn_str).await?;
 
     let mpw = cli
         .master_pw
@@ -35,16 +35,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let b_pw: &[u8] = mpw.as_bytes();
     let mut output_key_material = [0u8; 32];
 
-    let mut salt = [0u8; 32];
-    OsRng.fill_bytes(&mut salt);
+    let salt = SaltString::generate(&mut OsRng);
+
+    let mut salt_buf = [0u8; 32];
+
+    let raw_salt = salt.decode_b64(&mut salt_buf).unwrap();
 
     let _ = Argon2::default()
-        .hash_password_into(b_pw, &salt, &mut output_key_material)
+        .hash_password_into(b_pw, raw_salt, &mut output_key_material)
         .expect("failed hash");
-
-    let vault = get_vault(&pool).await?;
-
-    println!("{:#?}", vault);
 
     Ok(())
 }
@@ -60,7 +59,7 @@ pub struct Vault {
     pub created_at: Option<String>,
 }
 
-async fn get_vault(p: &sqlx::SqlitePool) -> Result<Vec<Vault>, Box<dyn std::error::Error>> {
+async fn get_vault(p: &sqlx::SqlitePool) -> Result<Vault, Box<dyn std::error::Error>> {
     let vault = sqlx::query_as::<_, Vault>(
         r#"
         SELECT
@@ -77,6 +76,8 @@ async fn get_vault(p: &sqlx::SqlitePool) -> Result<Vec<Vault>, Box<dyn std::erro
     )
     .fetch_all(p)
     .await?;
+
+    println!("{vault:#?}")
 
     Ok(vault)
 }
