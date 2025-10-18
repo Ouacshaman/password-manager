@@ -2,7 +2,8 @@
 
 use argon2::Argon2;
 use clap::{Parser, Subcommand};
-//use sqlx;
+use dotenvy::dotenv;
+use sqlx;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -12,6 +13,9 @@ struct Cli {
 
     #[arg(short, long, value_name = "master_password")]
     master_pw: Option<String>,
+
+    #[arg(short, long, value_name = "salt")]
+    salt: Option<String>,
 
     #[command(subcommand)]
     command: Option<Commands>,
@@ -30,23 +34,27 @@ enum Commands {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
-    //let conn_str =
-    //    std::env::var("DATABASE_URL").expect("Database Url is not entered into dotenv file");
+    dotenv().ok();
 
-    //let _pool = sqlx::SqlitePool::connect(&conn_str).await?;
+    let conn_str =
+        std::env::var("DATABASE_URL").expect("Database Url is not entered into dotenv file");
 
-    let arg_entry_pw = cli
+    println!("{}", conn_str);
+
+    let _pool = sqlx::SqlitePool::connect(&conn_str).await?;
+
+    let mpw = cli
         .master_pw
         .unwrap_or_else(|| "No String Found".to_string());
-    let b_pw: &[u8] = arg_entry_pw.as_bytes();
-    let salt = b"testing password encryption";
-
+    let b_pw: &[u8] = mpw.as_bytes();
+    let string_salt = cli.salt.unwrap_or_else(|| "No Salt Entered".to_string());
+    let salt = string_salt.as_bytes();
     let mut output_key_material = [0u8; 32];
     let _ = Argon2::default().hash_password_into(b_pw, salt, &mut output_key_material);
 
     println!("{:?}", &output_key_material.to_ascii_lowercase());
 
-    println!("{}:{}", cli.name.unwrap_or_default(), arg_entry_pw,);
+    println!("{}:{}", cli.name.unwrap_or_default(), mpw,);
 
     Ok(())
 }
