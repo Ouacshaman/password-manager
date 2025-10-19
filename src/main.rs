@@ -4,6 +4,8 @@ use argon2::Argon2;
 
 use rand::{RngCore, rngs::OsRng};
 
+use chacha20poly1305::{self, AeadCore, KeyInit, aead::Aead};
+
 use clap::Parser;
 use dotenvy::dotenv;
 use sqlx;
@@ -52,6 +54,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = Argon2::default()
         .hash_password_into(b_pw, &salt, &mut output_key_material)
         .expect("failed hash");
+
+    let cipher = chacha20poly1305::ChaCha20Poly1305::new((&output_key_material).into());
+
+    let nonce =
+        chacha20poly1305::ChaCha20Poly1305::generate_nonce(&mut chacha20poly1305::aead::OsRng);
+
+    let ciphertext = cipher
+        .encrypt(&nonce, data_key.as_ref())
+        .expect("unable to generate sealed key");
+
+    let plaintext = cipher
+        .decrypt(&nonce, ciphertext.as_ref())
+        .expect("unable to decrypt");
+
+    assert_eq!(&plaintext, &data_key);
 
     Ok(())
 }
