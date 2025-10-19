@@ -11,7 +11,10 @@ use sqlx;
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    #[arg(short, long, value_name = "master_password")]
+    #[arg(long, value_name = "initialize master password")]
+    init: Option<String>,
+
+    #[arg(short, long, value_name = "master password entry")]
     master_pw: Option<String>,
 }
 
@@ -29,22 +32,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let pool = sqlx::SqlitePool::connect(&conn_str).await?;
 
-    let mpw = cli
-        .master_pw
-        .unwrap_or_else(|| "No String Found".to_string());
-    let b_pw: &[u8] = mpw.as_bytes();
+    let vault = get_vault(&pool).await?;
+
+    if vault.is_empty() {
+        println!("Auth/Vault not setup. Use '--init' to setup the master password");
+        std::process::exit(0);
+    }
+
+    let init_pw = cli.init.unwrap_or_else(|| "No String Found".to_string());
+    let b_pw: &[u8] = init_pw.as_bytes();
     let mut output_key_material = [0u8; 32];
 
     let mut salt = [0u8; 32];
     OsRng.fill_bytes(&mut salt);
 
+    let mut data_key = [0u8; 32];
+    OsRng.fill_bytes(&mut data_key);
+
     let _ = Argon2::default()
         .hash_password_into(b_pw, &salt, &mut output_key_material)
         .expect("failed hash");
-
-    let vault = get_vault(&pool).await?;
-
-    println!("{:#?}", vault);
 
     Ok(())
 }
