@@ -1,6 +1,6 @@
 // Argon2 package is used to generate a master key
 
-use argon2::Argon2;
+use argon2::{Argon2, Params};
 
 use rand::{RngCore, rngs::OsRng};
 
@@ -70,9 +70,12 @@ async fn init(pw: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
     let mut data_key = [0u8; 32];
     OsRng.fill_bytes(&mut data_key);
 
-    let _ = Argon2::default()
-        .hash_password_into(b_pw, &salt, &mut output_key_material)
-        .expect("failed hash");
+    let _ = Argon2::new(
+        argon2::Algorithm::Argon2id,
+        argon2::Version::V0x13,
+        Params::default(),
+    )
+    .hash_password_into(b_pw, &salt, &mut output_key_material);
 
     let cipher = chacha20poly1305::ChaCha20Poly1305::new((&output_key_material).into());
 
