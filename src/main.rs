@@ -42,35 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match &cli.command {
         Commands::Init { password } => {
-            let init_pw = password.clone().unwrap_or_default();
-            let b_pw: &[u8] = init_pw.as_bytes();
-            let mut output_key_material = [0u8; 32];
-
-            let mut salt = [0u8; 32];
-            OsRng.fill_bytes(&mut salt);
-
-            let mut data_key = [0u8; 32];
-            OsRng.fill_bytes(&mut data_key);
-
-            let _ = Argon2::default()
-                .hash_password_into(b_pw, &salt, &mut output_key_material)
-                .expect("failed hash");
-
-            let cipher = chacha20poly1305::ChaCha20Poly1305::new((&output_key_material).into());
-
-            let nonce = chacha20poly1305::ChaCha20Poly1305::generate_nonce(
-                &mut chacha20poly1305::aead::OsRng,
-            );
-
-            let ciphertext = cipher
-                .encrypt(&nonce, data_key.as_ref())
-                .expect("unable to generate sealed key");
-
-            let plaintext = cipher
-                .decrypt(&nonce, ciphertext.as_ref())
-                .expect("unable to decrypt");
-
-            assert_eq!(&plaintext, &data_key);
+            let _ = init(password.clone());
         }
         Commands::Login { login } => {
             if vault.is_empty() {
@@ -83,6 +55,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("{:#?}", login.clone().unwrap_or_default())
         }
     }
+
+    Ok(())
+}
+
+async fn init(pw: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+    let init_pw = pw.unwrap_or_default();
+    let b_pw: &[u8] = init_pw.as_bytes();
+    let mut output_key_material = [0u8; 32];
+
+    let mut salt = [0u8; 32];
+    OsRng.fill_bytes(&mut salt);
+
+    let mut data_key = [0u8; 32];
+    OsRng.fill_bytes(&mut data_key);
+
+    let _ = Argon2::default()
+        .hash_password_into(b_pw, &salt, &mut output_key_material)
+        .expect("failed hash");
+
+    let cipher = chacha20poly1305::ChaCha20Poly1305::new((&output_key_material).into());
+
+    let nonce =
+        chacha20poly1305::ChaCha20Poly1305::generate_nonce(&mut chacha20poly1305::aead::OsRng);
+
+    let ciphertext = cipher
+        .encrypt(&nonce, data_key.as_ref())
+        .expect("unable to generate sealed key");
+
+    let plaintext = cipher
+        .decrypt(&nonce, ciphertext.as_ref())
+        .expect("unable to decrypt");
+
+    assert_eq!(&plaintext, &data_key);
 
     Ok(())
 }
