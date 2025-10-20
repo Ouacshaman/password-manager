@@ -6,18 +6,22 @@ use rand::{RngCore, rngs::OsRng};
 
 use chacha20poly1305::{self, AeadCore, KeyInit, aead::Aead};
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
 use sqlx;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
+#[command(propagate_version = true)]
 struct Cli {
-    #[arg(long, value_name = "initialize master password")]
-    init: Option<String>,
+    #[command(subcommand)]
+    command: Commands,
+}
 
-    #[arg(short, long, value_name = "master password entry")]
-    master_pw: Option<String>,
+#[derive(Subcommand)]
+enum Commands {
+    Init { password: Option<String> },
+    Login { login: Option<String> },
 }
 
 #[tokio::main]
@@ -36,39 +40,49 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let vault = get_vault(&pool).await?;
 
-    if vault.is_empty() {
-        println!("Auth/Vault not setup. Use '--init' to setup the master password");
-        std::process::exit(0);
+    match &cli.command {
+        Commands::Init { password } => {
+            let init_pw = password.clone().unwrap_or_default();
+            let b_pw: &[u8] = init_pw.as_bytes();
+            let mut output_key_material = [0u8; 32];
+
+            let mut salt = [0u8; 32];
+            OsRng.fill_bytes(&mut salt);
+
+            let mut data_key = [0u8; 32];
+            OsRng.fill_bytes(&mut data_key);
+
+            let _ = Argon2::default()
+                .hash_password_into(b_pw, &salt, &mut output_key_material)
+                .expect("failed hash");
+
+            let cipher = chacha20poly1305::ChaCha20Poly1305::new((&output_key_material).into());
+
+            let nonce = chacha20poly1305::ChaCha20Poly1305::generate_nonce(
+                &mut chacha20poly1305::aead::OsRng,
+            );
+
+            let ciphertext = cipher
+                .encrypt(&nonce, data_key.as_ref())
+                .expect("unable to generate sealed key");
+
+            let plaintext = cipher
+                .decrypt(&nonce, ciphertext.as_ref())
+                .expect("unable to decrypt");
+
+            assert_eq!(&plaintext, &data_key);
+        }
+        Commands::Login { login } => {
+            if vault.is_empty() {
+                println!(
+                    "The password manager hasn't been initiated, kindly utilize the Init command Ex: Init <password>"
+                );
+
+                std::process::exit(0);
+            }
+            println!("{:#?}", login.clone().unwrap_or_default())
+        }
     }
-
-    let init_pw = cli.init.unwrap_or_else(|| "No String Found".to_string());
-    let b_pw: &[u8] = init_pw.as_bytes();
-    let mut output_key_material = [0u8; 32];
-
-    let mut salt = [0u8; 32];
-    OsRng.fill_bytes(&mut salt);
-
-    let mut data_key = [0u8; 32];
-    OsRng.fill_bytes(&mut data_key);
-
-    let _ = Argon2::default()
-        .hash_password_into(b_pw, &salt, &mut output_key_material)
-        .expect("failed hash");
-
-    let cipher = chacha20poly1305::ChaCha20Poly1305::new((&output_key_material).into());
-
-    let nonce =
-        chacha20poly1305::ChaCha20Poly1305::generate_nonce(&mut chacha20poly1305::aead::OsRng);
-
-    let ciphertext = cipher
-        .encrypt(&nonce, data_key.as_ref())
-        .expect("unable to generate sealed key");
-
-    let plaintext = cipher
-        .decrypt(&nonce, ciphertext.as_ref())
-        .expect("unable to decrypt");
-
-    assert_eq!(&plaintext, &data_key);
 
     Ok(())
 }
