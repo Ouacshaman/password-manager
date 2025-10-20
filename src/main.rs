@@ -73,7 +73,7 @@ async fn init(pw: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
     let _ = Argon2::new(
         argon2::Algorithm::Argon2id,
         argon2::Version::V0x13,
-        Params::default(),
+        Params::new(256, 3, 2, Some(32)).unwrap_or_default(),
     )
     .hash_password_into(b_pw, &salt, &mut output_key_material);
 
