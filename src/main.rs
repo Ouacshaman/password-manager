@@ -126,3 +126,20 @@ async fn get_vault(p: &sqlx::SqlitePool) -> Result<Vec<Vault>, Box<dyn std::erro
 
     Ok(vault)
 }
+
+async fn init_vault(
+    p: &sqlx::SqlitePool,
+    salt: Vec<u8>,
+    params: String,
+    nonce: Vec<u8>,
+    sealed_dk: Vec<u8>,
+    verifier: Option<String>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let _ = sqlx::query!(
+        r#"
+        "#,
+    )
+    .fetch_all(p)
+    .await?;
+    Ok(())
+}
