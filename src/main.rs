@@ -105,7 +105,7 @@ async fn init(pw: Option<String>, p: &sqlx::SqlitePool) -> Result<(), Box<dyn st
         "Output_len": "Some(32)"
     }"#;
 
-    let _ = init_vault(
+    init_vault(
         p,
         salt.to_vec(),
         params.to_string(),
