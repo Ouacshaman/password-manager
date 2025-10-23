@@ -102,7 +102,7 @@ async fn init(pw: Option<String>, p: &sqlx::SqlitePool) -> Result<(), Box<dyn st
     }"#;
 
     let _ = init_vault(
-        p,
+        &p,
         salt.to_vec(),
         params.to_string(),
         nonce.to_vec(),
