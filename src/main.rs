@@ -8,7 +8,7 @@ use chacha20poly1305::{self, AeadCore, KeyInit, aead::Aead};
 
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
-use sqlx;
+use sqlx::{self, types::chrono};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -135,11 +135,21 @@ async fn init_vault(
     sealed_dk: Vec<u8>,
     verifier: Option<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let now = chrono::Local::now().naive_local();
+    let verifier = verifier.unwrap_or_default();
     let _ = sqlx::query!(
         r#"
+INSERT INTO vault_meta(id, kdf_salt, kdf_params, nonce, sealed_data_key, verifier, created_at)
+VALUES(1, $1, $2, $3, $4, $5, $6);
         "#,
+        salt,
+        params,
+        nonce,
+        sealed_dk,
+        verifier,
+        now
     )
-    .fetch_all(p)
+    .execute(p)
     .await?;
     Ok(())
 }

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS vault_meta (
     nonce           BLOB    NOT NULL,                            -- Nonce used to encrypt the DK
     sealed_data_key BLOB    NOT NULL,                            -- DK encrypted with KEK (derived from master password)
     verifier        BLOB,                                        -- Optional encrypted verifier/header for quick password check
-    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at      DATETIME
 );
 
 CREATE TABLE IF NOT EXISTS entries (
@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS entries (
     nonce           BLOB    NOT NULL,                             -- Nonce used to encrypt this entry's secret
     secret_cipher   BLOB    NOT NULL,                             -- AEAD ciphertext of the stored password
     aad             TEXT,                                         -- Associated data string (e.g., name|username|url)
-    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at      DATETIME,
+    updated_at      DATETIME
 );
 
 -- +goose Down
