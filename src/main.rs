@@ -42,7 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match &cli.command {
         Commands::Init { password } => {
-            let _ = init(password.clone(), &pool);
+            let _ = init(password.clone(), &pool).await?;
         }
         Commands::Login { login } => {
             if vault.is_empty() {
@@ -98,7 +98,7 @@ async fn init(pw: Option<String>, p: &sqlx::SqlitePool) -> Result<(), Box<dyn st
         "Memory_size": "262_144",
         "Iteration": "3",
         "Parallelism": "2",
-        "Output_len": "Some(32)",
+        "Output_len": "Some(32)"
     }"#;
 
     let _ = init_vault(
@@ -107,7 +107,8 @@ async fn init(pw: Option<String>, p: &sqlx::SqlitePool) -> Result<(), Box<dyn st
         params.to_string(),
         nonce.to_vec(),
         ciphertext,
-    );
+    )
+    .await?;
 
     Ok(())
 }
