@@ -42,6 +42,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match &cli.command {
         Commands::Init { password } => {
+            if !vault.is_empty() {
+                println!("Init has been called");
+                std::process::exit(0);
+            }
             let _ = init(password.clone(), &pool).await?;
         }
         Commands::Login { login } => {
@@ -151,7 +155,7 @@ async fn init_vault(
     sealed_dk: Vec<u8>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let now = chrono::Local::now().naive_local();
-    let _ = sqlx::query!(
+    let res = sqlx::query!(
         r#"
 INSERT INTO vault_meta(id, kdf_salt, kdf_params, nonce, sealed_data_key, created_at)
 VALUES(1, $1, $2, $3, $4, $5);
@@ -164,5 +168,8 @@ VALUES(1, $1, $2, $3, $4, $5);
     )
     .execute(p)
     .await?;
+
+    println!("{}", res.rows_affected());
+
     Ok(())
 }
