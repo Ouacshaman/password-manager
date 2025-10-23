@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS vault_meta (
     kdf_params      TEXT    NOT NULL,                            -- JSON or serialized Argon2 config
     nonce           BLOB    NOT NULL,                            -- Nonce used to encrypt the DK
     sealed_data_key BLOB    NOT NULL,                            -- DK encrypted with KEK (derived from master password)
-    verifier        BLOB,                                        -- Optional encrypted verifier/header for quick password check
     created_at      DATETIME
 );
 

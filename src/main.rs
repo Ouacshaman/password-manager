@@ -42,7 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match &cli.command {
         Commands::Init { password } => {
-            let _ = init(password.clone());
+            let _ = init(password.clone(), &pool);
         }
         Commands::Login { login } => {
             if vault.is_empty() {
@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn init(pw: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+async fn init(pw: Option<String>, p: &sqlx::SqlitePool) -> Result<(), Box<dyn std::error::Error>> {
     let init_pw = pw.unwrap_or_default();
     let b_pw: &[u8] = init_pw.as_bytes();
     let mut output_key_material = [0u8; 32];
@@ -92,6 +92,23 @@ async fn init(pw: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
 
     assert_eq!(&plaintext, &data_key);
 
+    let params = r#"{
+        "Algorithm": "Argon2id",
+        "Version": "V0x13",
+        "Memory_size": "262_144",
+        "Iteration": "3",
+        "Parallelism": "2",
+        "Output_len": "Some(32)",
+    }"#;
+
+    let _ = init_vault(
+        p,
+        salt.to_vec(),
+        params.to_string(),
+        nonce.to_vec(),
+        ciphertext,
+    );
+
     Ok(())
 }
 
@@ -102,7 +119,6 @@ pub struct Vault {
     pub kdf_params: String,
     pub nonce: Vec<u8>,
     pub sealed_data_key: Vec<u8>,
-    pub verifier: Option<Vec<u8>>,
     pub created_at: Option<String>,
 }
 
@@ -115,7 +131,6 @@ async fn get_vault(p: &sqlx::SqlitePool) -> Result<Vec<Vault>, Box<dyn std::erro
             kdf_params,
             nonce,
             sealed_data_key,
-            verifier,
             created_at
         FROM vault_meta
         WHERE id = 1
@@ -133,20 +148,17 @@ async fn init_vault(
     params: String,
     nonce: Vec<u8>,
     sealed_dk: Vec<u8>,
-    verifier: Option<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let now = chrono::Local::now().naive_local();
-    let verifier = verifier.unwrap_or_default();
     let _ = sqlx::query!(
         r#"
-INSERT INTO vault_meta(id, kdf_salt, kdf_params, nonce, sealed_data_key, verifier, created_at)
-VALUES(1, $1, $2, $3, $4, $5, $6);
+INSERT INTO vault_meta(id, kdf_salt, kdf_params, nonce, sealed_data_key, created_at)
+VALUES(1, $1, $2, $3, $4, $5);
         "#,
         salt,
         params,
         nonce,
         sealed_dk,
-        verifier,
         now
     )
     .execute(p)
