@@ -56,8 +56,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 std::process::exit(0);
             }
-            println!("{:#?}", login.clone().unwrap_or_default())
-            let init_pw = login.unwrap_or_default();
+            println!("{:#?}", login.clone().unwrap_or_default());
+            let init_pw = login.clone().unwrap_or_default();
             let b_pw: &[u8] = init_pw.as_bytes();
             let mut output_key_material = [0u8; 32];
 
@@ -66,17 +66,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 argon2::Version::V0x13,
                 Params::new(262_144, 3, 2, None).unwrap_or_default(),
             )
-            .hash_password_into(b_pw, vault[0].kdf_salt, output_key_material);
+            .hash_password_into(b_pw, &vault[0].kdf_salt, &mut output_key_material);
 
             let cipher = chacha20poly1305::ChaCha20Poly1305::new((&output_key_material).into());
 
+            let nonce = chacha20poly1305::Nonce::from_slice(&vault[0].nonce);
+
             let plaintext = cipher
-                .decrypt(&vault[0].nonce, vault[0].sealed_data_key.as_ref())
+                .decrypt(nonce, vault[0].sealed_data_key.as_ref())
                 .expect("unable to decrypt");
 
-            println!({}, plaintext);
+            println!(
+                "retrieved {:?} generated {:?}",
+                plaintext, output_key_material
+            );
         }
-
     }
 
     Ok(())
@@ -178,7 +182,7 @@ async fn init_vault(
         r#"
 INSERT INTO vault_meta(id, kdf_salt, kdf_params, nonce, sealed_data_key, created_at)
 VALUES(1, ?, ?, ?, ?, ?);
-        "#
+        "#,
     )
     .bind(salt)
     .bind(params)
