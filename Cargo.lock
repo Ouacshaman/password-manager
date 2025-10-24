@@ -1170,6 +1170,8 @@ dependencies = [
  "clap",
  "dotenvy",
  "rand",
+ "serde",
+ "serde_json",
  "sqlx",
  "tokio",
 ]
