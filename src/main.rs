@@ -1,5 +1,3 @@
-// Argon2 package is used to generate a master key
-
 use std::str::FromStr;
 
 use argon2::{Argon2, Params};
@@ -10,9 +8,10 @@ use chacha20poly1305::{self, AeadCore, KeyInit, aead::Aead};
 
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
-use sqlx::{self, types::chrono};
 
 use serde::{Deserialize, Serialize};
+
+use password_manager::vault;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -63,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let pool = sqlx::SqlitePool::connect(&conn_str).await?;
 
-    let vault = get_vault(&pool).await?;
+    let vault = vault::get_vault(&pool).await?;
 
     match &cli.command {
         Commands::Init { password } => {
@@ -155,7 +154,7 @@ async fn init(pw: Option<String>, p: &sqlx::SqlitePool) -> Result<(), Box<dyn st
         "Output_len": 32
     }"#;
 
-    init_vault(
+    vault::init_vault(
         p,
         salt.to_vec(),
         params.to_string(),
@@ -163,63 +162,6 @@ async fn init(pw: Option<String>, p: &sqlx::SqlitePool) -> Result<(), Box<dyn st
         ciphertext,
     )
     .await?;
-
-    Ok(())
-}
-
-#[derive(sqlx::FromRow, Debug)]
-pub struct Vault {
-    pub id: i32,
-    pub kdf_salt: Vec<u8>,
-    pub kdf_params: String,
-    pub nonce: Vec<u8>,
-    pub sealed_data_key: Vec<u8>,
-    pub created_at: Option<String>,
-}
-
-async fn get_vault(p: &sqlx::SqlitePool) -> Result<Vec<Vault>, Box<dyn std::error::Error>> {
-    let vault = sqlx::query_as::<_, Vault>(
-        r#"
-        SELECT
-            id,
-            kdf_salt,
-            kdf_params,
-            nonce,
-            sealed_data_key,
-            created_at
-        FROM vault_meta
-        WHERE id = 1
-        "#,
-    )
-    .fetch_all(p)
-    .await?;
-
-    Ok(vault)
-}
-
-async fn init_vault(
-    p: &sqlx::SqlitePool,
-    salt: Vec<u8>,
-    params: String,
-    nonce: Vec<u8>,
-    sealed_dk: Vec<u8>,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let now = chrono::Local::now().naive_local();
-    let res = sqlx::query(
-        r#"
-INSERT INTO vault_meta(id, kdf_salt, kdf_params, nonce, sealed_data_key, created_at)
-VALUES(1, ?, ?, ?, ?, ?);
-        "#,
-    )
-    .bind(salt)
-    .bind(params)
-    .bind(nonce)
-    .bind(sealed_dk)
-    .bind(now)
-    .execute(p)
-    .await?;
-
-    println!("{}", res.rows_affected());
 
     Ok(())
 }
