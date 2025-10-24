@@ -56,7 +56,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 std::process::exit(0);
             }
-            println!("{:#?}", login.clone().unwrap_or_default());
             let init_pw = login.clone().unwrap_or_default();
             let b_pw: &[u8] = init_pw.as_bytes();
             let mut output_key_material = [0u8; 32];
@@ -72,14 +71,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let nonce = chacha20poly1305::Nonce::from_slice(&vault[0].nonce);
 
-            let plaintext = cipher
+            let _ = cipher
                 .decrypt(nonce, vault[0].sealed_data_key.as_ref())
-                .expect("unable to decrypt");
-
-            println!(
-                "retrieved {:?} generated {:?}",
-                plaintext, output_key_material
-            );
+                .expect("Incorrect Password");
         }
     }
 
