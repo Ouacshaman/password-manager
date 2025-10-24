@@ -155,17 +155,17 @@ async fn init_vault(
     sealed_dk: Vec<u8>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let now = chrono::Local::now().naive_local();
-    let res = sqlx::query!(
+    let res = sqlx::query(
         r#"
 INSERT INTO vault_meta(id, kdf_salt, kdf_params, nonce, sealed_data_key, created_at)
-VALUES(1, $1, $2, $3, $4, $5);
-        "#,
-        salt,
-        params,
-        nonce,
-        sealed_dk,
-        now
+VALUES(1, ?, ?, ?, ?, ?);
+        "#
     )
+    .bind(salt)
+    .bind(params)
+    .bind(nonce)
+    .bind(sealed_dk)
+    .bind(now)
     .execute(p)
     .await?;
 
