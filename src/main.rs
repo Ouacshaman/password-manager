@@ -57,7 +57,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 std::process::exit(0);
             }
             println!("{:#?}", login.clone().unwrap_or_default())
+            let init_pw = login.unwrap_or_default();
+            let b_pw: &[u8] = init_pw.as_bytes();
+            let mut output_key_material = [0u8; 32];
+
+            let _ = Argon2::new(
+                argon2::Algorithm::Argon2id,
+                argon2::Version::V0x13,
+                Params::new(262_144, 3, 2, None).unwrap_or_default(),
+            )
+            .hash_password_into(b_pw, vault[0].kdf_salt, output_key_material);
+
+            let cipher = chacha20poly1305::ChaCha20Poly1305::new((&output_key_material).into());
+
+            let plaintext = cipher
+                .decrypt(&vault[0].nonce, vault[0].sealed_data_key.as_ref())
+                .expect("unable to decrypt");
+
+            println!({}, plaintext);
         }
+
     }
 
     Ok(())
