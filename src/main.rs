@@ -1,8 +1,3 @@
-use std::str::FromStr;
-
-use argon2::{Argon2, Params};
-
-use chacha20poly1305::{self, KeyInit, aead::Aead};
 
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
@@ -86,31 +81,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             let init_pw = login.clone().unwrap_or_default();
             let b_pw: &[u8] = init_pw.as_bytes();
-            let mut output_key_material = [0u8; 32];
 
-            let kdfp: KdfParams = serde_json::from_str(&vault[0].kdf_params)?;
+            let kdfp: verification::KdfParams = serde_json::from_str(&vault[0].kdf_params)?;
 
-            let _ = Argon2::new(
-                argon2::Algorithm::from_str(&kdfp.algorithm).unwrap_or_default(),
-                argon2::Version::try_from(kdfp.version).unwrap_or_default(),
-                Params::new(
-                    kdfp.memory_size,
-                    kdfp.iteration,
-                    kdfp.parallelism,
-                    kdfp.output_len,
-                )
-                .unwrap_or_default(),
-            )
-            .hash_password_into(b_pw, &vault[0].kdf_salt, &mut output_key_material);
-
-            let cipher = chacha20poly1305::ChaCha20Poly1305::new((&output_key_material).into());
-
-            let nonce = chacha20poly1305::Nonce::from_slice(&vault[0].nonce);
-
-            let _ = cipher
-                .decrypt(nonce, vault[0].sealed_data_key.as_ref())
-                .expect("Incorrect Password");
+            verify(
+                kdfp,
+                &vault[0].kdf_salt,
+                &vault[0].nonce,
+                b_pw,
+                &vault[0].sealed_data_key,
+            ).await?;
         }
+
     }
 
     Ok(())

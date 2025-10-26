@@ -31,7 +31,7 @@ pub async fn verify(
     salt: &Vec<u8>,
     nonce: &Vec<u8>,
     b_pw: &[u8],
-    sealed_data_key: Vec<u8>,
+    sealed_data_key: &Vec<u8>,
     ) -> Result<(), Box<dyn std::error::Error>> {
     
     let mut output_key_material = [0u8; 32];
