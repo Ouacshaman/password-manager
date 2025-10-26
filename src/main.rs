@@ -14,6 +14,9 @@ use password_manager::vault;
 mod init;
 use crate::init as mpw_init;
 
+mod verification;
+use crate::verification::verify;
+
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 #[command(propagate_version = true)]
