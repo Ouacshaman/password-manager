@@ -1,8 +1,5 @@
-
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
-
-use serde::{Deserialize, Serialize};
 
 use password_manager::vault;
 
@@ -24,27 +21,6 @@ struct Cli {
 enum Commands {
     Init { password: Option<String> },
     Login { login: Option<String> },
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct KdfParams {
-    #[serde(rename = "Algorithm")]
-    pub algorithm: String,
-
-    #[serde(rename = "Version")]
-    pub version: u32,
-
-    #[serde(rename = "Memory_size")]
-    pub memory_size: u32,
-
-    #[serde(rename = "Iteration")]
-    pub iteration: u32,
-
-    #[serde(rename = "Parallelism")]
-    pub parallelism: u32,
-
-    #[serde(rename = "Output_len")]
-    pub output_len: Option<usize>,
 }
 
 #[tokio::main]

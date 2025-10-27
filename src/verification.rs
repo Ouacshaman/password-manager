@@ -4,7 +4,6 @@ use chacha20poly1305::{self, KeyInit, aead::Aead};
 use std::str::FromStr;
 
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct KdfParams {
     #[serde(rename = "Algorithm")]
