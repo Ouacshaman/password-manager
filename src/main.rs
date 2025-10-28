@@ -23,6 +23,7 @@ enum Commands {
     Login { login: Option<String> },
     Add {
         name: String,
+        url: Option<String>,
         username: String,
         password: String,
     },
