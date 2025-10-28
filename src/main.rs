@@ -21,6 +21,13 @@ struct Cli {
 enum Commands {
     Init { password: Option<String> },
     Login { login: Option<String> },
+    Add {
+        name: String,
+        username: String,
+        password: String,
+    },
+    Get {name: String},
+    List,
 }
 
 #[tokio::main]
