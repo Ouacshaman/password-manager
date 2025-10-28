@@ -76,7 +76,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &vault[0].sealed_data_key,
             ).await?;
         }
-
+        Commands::Add{ name, url, username, password} =>{
+            println!("blank");
+        }
+        Commands::Get{ name} =>{
+            println!("blank");
+        }
+        Commands::List =>{
+            println!("blank");
+        }
     }
 
     Ok(())

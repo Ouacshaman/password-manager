@@ -48,13 +48,13 @@ pub async fn verify(
             )
             .hash_password_into(b_pw, &salt, &mut output_key_material);
 
-            let cipher = chacha20poly1305::ChaCha20Poly1305::new((&output_key_material).into());
+    let cipher = chacha20poly1305::ChaCha20Poly1305::new((&output_key_material).into());
 
-            let nonce = chacha20poly1305::Nonce::from_slice(&nonce);
+    let nonce = chacha20poly1305::Nonce::from_slice(&nonce);
 
-            let _ = cipher
-                .decrypt(nonce, sealed_data_key.as_ref())
-                .expect("Incorrect Password");
+    let _ = cipher
+        .decrypt(nonce, sealed_data_key.as_ref())
+        .expect("Incorrect Password");
 
     Ok(())
 
