@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS entries (
     url             TEXT,                                         -- Optional website/app
     nonce           BLOB    NOT NULL,                             -- Nonce used to encrypt this entry's secret
     secret_cipher   BLOB    NOT NULL,                             -- AEAD ciphertext of the stored password
-    aad             TEXT,                                         -- Associated data string (e.g., name|username|url)
     created_at      DATETIME,
     updated_at      DATETIME
 );
