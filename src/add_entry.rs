@@ -1,8 +1,5 @@
 use crate::verification::KdfParams;
 use crate::verification::verify;
-use argon2::{Argon2, Params};
-use password_manager::vault;
-use rand::{RngCore, rngs::OsRng};
 
 use chacha20poly1305::{self, AeadCore, KeyInit, aead::Aead};
 
@@ -20,12 +17,14 @@ pub async fn add_entry(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let dk = verify(kdfp, salt, nonce, b_pw, sealed_data_key).await?;
 
-    let cipher = chacha20poly1305::ChaCha20Poly1305::new(&dk);
+    let cipher = chacha20poly1305::ChaCha20Poly1305::new(&dk.into());
 
     let nonce =
         chacha20poly1305::ChaCha20Poly1305::generate_nonce(&mut chacha20poly1305::aead::OsRng);
 
-    let ciphertext = cipher.encrypt(&nonce, password).expect("Unable to Encrypt");
+    let ciphertext = cipher
+        .encrypt(&nonce, password.as_ref())
+        .expect("Unable to Encrypt");
 
     return Ok(());
 }
