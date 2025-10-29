@@ -68,7 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let kdfp: verification::KdfParams = serde_json::from_str(&vault[0].kdf_params)?;
 
-            verify(
+            let _ = verify(
                 kdfp,
                 &vault[0].kdf_salt,
                 &vault[0].nonce,

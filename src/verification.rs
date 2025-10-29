@@ -31,7 +31,7 @@ pub async fn verify(
     nonce: &Vec<u8>,
     b_pw: &[u8],
     sealed_data_key: &Vec<u8>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     
     let mut output_key_material = [0u8; 32];
 
@@ -52,10 +52,10 @@ pub async fn verify(
 
     let nonce = chacha20poly1305::Nonce::from_slice(&nonce);
 
-    let _ = cipher
+    let res = cipher
         .decrypt(nonce, sealed_data_key.as_ref())
         .expect("Incorrect Password");
 
-    Ok(())
+    Ok(res)
 
 } 
