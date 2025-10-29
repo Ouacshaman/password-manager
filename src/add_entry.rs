@@ -17,7 +17,9 @@ pub async fn add_entry(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let dk = verify(kdfp, salt, nonce, b_pw, sealed_data_key).await?;
 
-    let cipher = chacha20poly1305::ChaCha20Poly1305::new(&dk.into());
+    let key = chacha20poly1305::Key::from_slice(&dk);
+
+    let cipher = chacha20poly1305::ChaCha20Poly1305::new(key);
 
     let nonce =
         chacha20poly1305::ChaCha20Poly1305::generate_nonce(&mut chacha20poly1305::aead::OsRng);
