@@ -1,11 +1,10 @@
 mod verification;
-use crate::verification::cred;
+use crate::verification::verify;
 use argon2::{Argon2, Params};
 use password_manager::vault;
 use rand::{RngCore, rngs::OsRng};
 
 use chacha20poly1305::{self, AeadCore, KeyInit, aead::Aead};
-
 
 pub async fn add_entry(
     p: &sqlx::SqlitePool,
@@ -18,7 +17,15 @@ pub async fn add_entry(
     nonce: &Vec<u8>,
     b_pw: &[u8],
     sealed_data_key: &Vec<u8>,
-    ) -> Result< (), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error>> {
+    let dk = verify(kdfp, salt, nonnce, b_pw, sealed_data_key).await?;
 
-    return Ok(())
+    let cipher = chacha20poly1305::ChaCha20Poly1305::new(&dk);
+
+    let nonce =
+        chacha20poly1305::ChaCha20Poly1305::generate_nonce(&mut chacha20poly1305::aead::OsRng);
+
+    let ciphertext = cipher.encrypt(&nonce, password).expect("Unable to Encrypt");
+
+    return Ok(());
 }
