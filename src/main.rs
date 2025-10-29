@@ -29,10 +29,15 @@ enum Commands {
         login: Option<String>,
     },
     Add {
+        #[arg(long)]
         mpw: String,
+        #[arg(long)]
         name: String,
+        #[arg(long)]
         url: Option<String>,
+        #[arg(long)]
         username: String,
+        #[arg(long)]
         password: String,
     },
     Get {
