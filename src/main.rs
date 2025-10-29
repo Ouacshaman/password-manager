@@ -12,6 +12,9 @@ use crate::verification::verify;
 mod add_entry;
 use crate::add_entry::add_entry;
 
+mod get_entry;
+use crate::get_entry::get_entry;
+
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -119,7 +122,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("blank");
         }
         Commands::Get { name } => {
-            println!("{:#?}", name);
+            let entries = get_entry(&pool, name.to_string()).await?;
+            for entry in entries {
+                println!("{}", entry.name);
+            }
         }
         Commands::List => {
             println!("blank");
