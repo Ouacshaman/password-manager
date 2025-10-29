@@ -9,6 +9,9 @@ use crate::init as mpw_init;
 mod verification;
 use crate::verification::verify;
 
+mod add_entry;
+use crate::add_entry::add_entry;
+
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -19,15 +22,22 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Init { password: Option<String> },
-    Login { login: Option<String> },
+    Init {
+        password: Option<String>,
+    },
+    Login {
+        login: Option<String>,
+    },
     Add {
+        mpw: String,
         name: String,
         url: Option<String>,
         username: String,
         password: String,
     },
-    Get {name: String},
+    Get {
+        name: String,
+    },
     List,
 }
 
@@ -74,15 +84,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &vault[0].nonce,
                 b_pw,
                 &vault[0].sealed_data_key,
-            ).await?;
+            )
+            .await?;
         }
-        Commands::Add{ name, url, username, password} =>{
+        Commands::Add {
+            mpw,
+            name,
+            url,
+            username,
+            password,
+        } => {
+            let init_pw = mpw.clone();
+            let b_pw: &[u8] = init_pw.as_bytes();
+
+            let kdfp: verification::KdfParams = serde_json::from_str(&vault[0].kdf_params)?;
+            add_entry(
+                &pool,
+                name,
+                url,
+                username,
+                password,
+                kdfp,
+                &vault[0].kdf_salt,
+                &vault[0].nonce,
+                b_pw,
+                &vault[0].sealed_data_key,
+            )
+            .await?;
             println!("blank");
         }
-        Commands::Get{ name} =>{
-            println!("blank");
+        Commands::Get { name } => {
+            println!("{:#?}", name);
         }
-        Commands::List =>{
+        Commands::List => {
             println!("blank");
         }
     }
