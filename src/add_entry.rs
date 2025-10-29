@@ -1,5 +1,6 @@
 use crate::verification::KdfParams;
 use crate::verification::verify;
+use password_manager::cred::add_cred;
 
 use chacha20poly1305::{self, AeadCore, KeyInit, aead::Aead};
 
@@ -27,6 +28,16 @@ pub async fn add_entry(
     let ciphertext = cipher
         .encrypt(&nonce, password.as_ref())
         .expect("Unable to Encrypt");
+
+    add_cred(
+        p,
+        name.to_string(),
+        username.to_string(),
+        url.as_ref().expect("No Url Found").to_string(),
+        nonce.to_vec(),
+        ciphertext,
+    )
+    .await?;
 
     return Ok(());
 }
