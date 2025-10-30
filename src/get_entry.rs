@@ -30,7 +30,10 @@ pub async fn get_entry(
             "Name: {} Username: {} Url: {}",
             item.name, item.username, item.url
         );
-        println!("Decrypted: {:?}", decrypted.unwrap_or_default());
+
+        let stringed_pw: String =
+            String::from_utf8(decrypted.unwrap_or_default()).unwrap_or_default();
+        println!("Decrypted: {}", stringed_pw);
     }
 
     Ok(())
