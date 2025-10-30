@@ -30,7 +30,7 @@ pub async fn get_entry(
             "Name: {}Username: {}, Url: {}",
             item.name, item.username, item.url
         );
-        println!("{:#?}", decrypted);
+        println!("Decrypted: {:?}", decrypted);
     }
 
     Ok(())
