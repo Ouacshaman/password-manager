@@ -21,7 +21,6 @@ pub async fn get_list(
         r#"
         SELECT
             id,
-            name,
             username,
             url,
             nonce,
