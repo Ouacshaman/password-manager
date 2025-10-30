@@ -27,7 +27,7 @@ pub async fn get_entry(
         let nonce = Nonce::from_slice(&item.nonce);
         let decrypted = cipher.decrypt(&nonce, password.as_ref());
         println!(
-            "Name: {}Username: {}, Url: {}",
+            "Name: {} Username: {} Url: {}",
             item.name, item.username, item.url
         );
         println!("Decrypted: {:?}", decrypted.unwrap_or_default());
