@@ -22,4 +22,4 @@ CREATE TABLE IF NOT EXISTS entries (
 
 -- +goose Down
 DROP TABLE IF EXISTS vault_meta;
-DROP TABLE IF EXISTS enties;
+DROP TABLE IF EXISTS entries;
