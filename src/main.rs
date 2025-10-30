@@ -44,6 +44,9 @@ enum Commands {
         password: String,
     },
     Get {
+        #[arg(long)]
+        mpw: String,
+        #[arg(long)]
         name: String,
     },
     List,
@@ -121,11 +124,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?;
             println!("blank");
         }
-        Commands::Get { name } => {
-            let entries = get_entry(&pool, name.to_string()).await?;
-            for entry in entries {
-                println!("{}", entry.name);
-            }
+        Commands::Get { mpw, name } => {
+            let init_pw = mpw.clone();
+            let b_pw: &[u8] = init_pw.as_bytes();
+
+            let kdfp: verification::KdfParams = serde_json::from_str(&vault[0].kdf_params)?;
+
+            let _ = get_entry(
+                &pool,
+                name.to_string(),
+                kdfp,
+                &vault[0].kdf_salt,
+                &vault[0].nonce,
+                b_pw,
+                &vault[0].sealed_data_key,
+            )
+            .await?;
         }
         Commands::List => {
             println!("blank");
