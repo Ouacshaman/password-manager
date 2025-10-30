@@ -21,6 +21,7 @@ pub async fn get_list(
         r#"
         SELECT
             id,
+            name,
             username,
             url,
             nonce,
@@ -28,7 +29,7 @@ pub async fn get_list(
             created_at,
             updated_at,
         FROM entries
-        Where name = ?
+        WHERE name = ?
         "#,
     )
     .bind(name)
