@@ -27,7 +27,7 @@ pub async fn get_list(
             nonce,
             secret_cipher,
             created_at,
-            updated_at,
+            updated_at
         FROM entries
         WHERE name = ?
         "#,

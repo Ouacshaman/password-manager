@@ -1,6 +1,7 @@
 use crate::verification::KdfParams;
 use crate::verification::verify;
-use chacha20poly1305::{self, AeadCore, KeyInit, aead::Aead};
+use chacha20poly1305::Nonce;
+use chacha20poly1305::{self, KeyInit, aead::Aead};
 use password_manager::cred::get_list;
 use sqlx::SqlitePool;
 
@@ -21,13 +22,15 @@ pub async fn get_entry(
 
     let cipher = chacha20poly1305::ChaCha20Poly1305::new(key);
 
-    let nonce =
-        chacha20poly1305::ChaCha20Poly1305::generate_nonce(&mut chacha20poly1305::aead::OsRng);
-
     for item in res {
         let password = item.secret_cipher;
+        let nonce = Nonce::from_slice(&item.nonce);
         let decrypted = cipher.decrypt(&nonce, password.as_ref());
-        println!("{:#?}", decrypted.unwrap_or_default())
+        println!(
+            "Name: {}Username: {}, Url: {}",
+            item.name, item.username, item.url
+        );
+        println!("{:#?}", decrypted);
     }
 
     Ok(())
