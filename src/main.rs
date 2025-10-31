@@ -13,7 +13,7 @@ mod add_entry;
 use crate::add_entry::add_entry;
 
 mod get_entry;
-use crate::get_entry::get_entry;
+use crate::get_entry::{get_entry, list_entries};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -142,7 +142,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?;
         }
         Commands::List => {
-            println!("blank");
+            let _ = list_entries(&pool).await?;
         }
     }
 

@@ -2,7 +2,8 @@ use crate::verification::KdfParams;
 use crate::verification::verify;
 use chacha20poly1305::Nonce;
 use chacha20poly1305::{self, KeyInit, aead::Aead};
-use password_manager::cred::get_list;
+use password_manager::cred::get_entries;
+use password_manager::cred::get_entry_by_name;
 use sqlx::SqlitePool;
 
 pub async fn get_entry(
@@ -14,7 +15,7 @@ pub async fn get_entry(
     b_pw: &[u8],
     sealed_data_key: &Vec<u8>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let res = get_list(p, name).await?;
+    let res = get_entry_by_name(p, name).await?;
 
     let dk = verify(kdfp, salt, nonce, b_pw, sealed_data_key).await?;
 
@@ -34,6 +35,19 @@ pub async fn get_entry(
         let stringed_pw: String =
             String::from_utf8(decrypted.unwrap_or_default()).unwrap_or_default();
         println!("Decrypted: {}", stringed_pw);
+    }
+
+    Ok(())
+}
+
+pub async fn list_entries(p: &SqlitePool) -> Result<(), Box<dyn std::error::Error>> {
+    let res = get_entries(p).await?;
+
+    for item in res {
+        println!(
+            "Name: {} Username: {} Url: {}",
+            item.name, item.username, item.url
+        );
     }
 
     Ok(())

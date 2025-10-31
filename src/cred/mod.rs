@@ -13,7 +13,7 @@ pub struct Entries {
     pub updated_at: Option<String>,
 }
 
-pub async fn get_list(
+pub async fn get_entry_by_name(
     p: &sqlx::SqlitePool,
     name: String,
 ) -> Result<Vec<Entries>, Box<dyn std::error::Error>> {
@@ -67,4 +67,25 @@ VALUES(?, ?, ?, ?, ?, ?, ?)
     println!("{}", res.rows_affected());
 
     Ok(())
+}
+
+pub async fn get_entries(p: &sqlx::SqlitePool) -> Result<Vec<Entries>, Box<dyn std::error::Error>> {
+    let creds = sqlx::query_as::<_, Entries>(
+        r#"
+        SELECT
+            id,
+            name,
+            username,
+            url,
+            nonce,
+            secret_cipher,
+            created_at,
+            updated_at
+        FROM entries
+        "#,
+    )
+    .fetch_all(p)
+    .await?;
+
+    Ok(creds)
 }
