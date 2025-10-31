@@ -28,8 +28,8 @@ enum Commands {
     Init {
         password: Option<String>,
     },
-    Login {
-        login: Option<String>,
+    Check {
+        password: Option<String>,
     },
     Add {
         #[arg(long)]
@@ -62,8 +62,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let conn_str =
         std::env::var("DATABASE_URL").expect("Database Url is not entered into dotenv file");
 
-    println!("{}", conn_str);
-
     let pool = sqlx::SqlitePool::connect(&conn_str).await?;
 
     let vault = vault::get_vault(&pool).await?;
@@ -76,7 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             let _ = mpw_init::init(password.clone(), &pool).await?;
         }
-        Commands::Login { login } => {
+        Commands::Check { password } => {
             if vault.is_empty() {
                 println!(
                     "The password manager hasn't been initiated, kindly utilize the Init command Ex: Init <password>"
@@ -84,7 +82,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 std::process::exit(0);
             }
-            let init_pw = login.clone().unwrap_or_default();
+            let init_pw = password.clone().unwrap_or_default();
             let b_pw: &[u8] = init_pw.as_bytes();
 
             let kdfp: verification::KdfParams = serde_json::from_str(&vault[0].kdf_params)?;
@@ -97,6 +95,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &vault[0].sealed_data_key,
             )
             .await?;
+
+            println!("Master Password Check Passed")
         }
         Commands::Add {
             mpw,
