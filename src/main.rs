@@ -122,7 +122,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &vault[0].sealed_data_key,
             )
             .await?;
-            println!("blank");
+            println!("Entry Added For: {}", name);
         }
         Commands::Get { mpw, name } => {
             let init_pw = mpw.clone();
