@@ -1,5 +1,5 @@
 use argon2::{Argon2, Params};
-use password_manager::vault;
+use pman::vault;
 use rand::{RngCore, rngs::OsRng};
 
 use chacha20poly1305::{self, AeadCore, KeyInit, aead::Aead};

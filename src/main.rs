@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use dotenvy::dotenv;
 
-use password_manager::vault;
+use pman::vault;
 
 mod init;
 use crate::init as mpw_init;

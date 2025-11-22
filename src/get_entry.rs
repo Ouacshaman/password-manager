@@ -2,8 +2,8 @@ use crate::verification::KdfParams;
 use crate::verification::verify;
 use chacha20poly1305::Nonce;
 use chacha20poly1305::{self, KeyInit, aead::Aead};
-use password_manager::cred::get_entries;
-use password_manager::cred::get_entry_by_name;
+use pman::cred::get_entries;
+use pman::cred::get_entry_by_name;
 use sqlx::SqlitePool;
 
 pub async fn get_entry(

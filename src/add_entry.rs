@@ -1,6 +1,6 @@
 use crate::verification::KdfParams;
 use crate::verification::verify;
-use password_manager::cred::add_cred;
+use pman::cred::add_cred;
 
 use chacha20poly1305::{self, AeadCore, KeyInit, aead::Aead};
 
