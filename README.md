@@ -94,16 +94,6 @@ sealed_data_key      data_key (DK)
           Encrypt / Decrypt Entries
 ```
 
-### What gets stored?
-
-| What | Where | Why |
-|------|-------|------|
-| KEK | ❌ never stored | Derived at login only |
-| DK | ❌ never stored (plaintext) | Kept only in RAM |
-| sealed DK | `vault_meta` | Allows persistent vault across sessions |
-| entry ciphertext | `entries.secret_cipher` | Stored password |
-| entry nonce | `entries.nonce` | Required for AEAD decryption |
-
 ---
 
 ## 🖥️ CLI Usage
@@ -142,7 +132,7 @@ pman list --mpw <MASTER_PASSWORD>
 ```bash
 cargo add sqlx --features sqlite,runtime-tokio,macros,chrono
 cargo add argon2 chacha20poly1305 rand clap dotenvy serde serde_json zeroize secrecy
-cargo install goose
+go install github.com/pressly/goose/v3/cmd/goose@latest
 ```
 
 ### 2. Create `.env`
