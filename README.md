@@ -1,31 +1,9 @@
-# 🗝️ Password Manager (Rust)
+# Password Manager (Rust)
 
 A lightweight, secure, **local-first** password manager written in Rust — no cloud, no telemetry, and no external services. Everything is encrypted locally using proven cryptography and stored in a simple SQLite database.
 
 ---
 
-## ✨ Features
-
-- 🔐 **Master password–based encryption**
-  - Argon2id for password KDF  
-  - Master password → Key Encryption Key (KEK)  
-  - KEK encrypts a random Data Key (DK)
-- 🔒 **Per-entry authenticated encryption**  
-  - ChaCha20-Poly1305 with a unique nonce per entry  
-  - AEAD guarantees integrity + tamper detection
-- 🗃️ **SQLite backend**
-  - No server required  
-  - Portable `.db` file  
-- 🧰 **Typed queries with SQLx**
-- ⚙️ **Clap-powered CLI**  
-  - Clear and explicit `--flags`  
-  - Easy to extend with subcommands
-- 🧩 **Goose migrations** for clean schema versioning
-- 🐧 Works on macOS / Linux / Windows
-
----
-
-## 🧱 Database Schema (via Goose)
 
 This project uses **Goose** for database migrations.  
 You must create the folders:
@@ -76,27 +54,8 @@ goose -dir ./sql/schema sqlite3 ./pman.db up
 
 ---
 
-## 🧩 Crypto Architecture
 
-```
-       Master Password
-              |
-           Argon2id
-              ↓
-          KEK (32b)
-              |
-   -----------------------
-   |                     |
- Seal DK            Unseal DK
-   |                     |
-sealed_data_key      data_key (DK)
-                      |
-          Encrypt / Decrypt Entries
-```
-
----
-
-## 🖥️ CLI Usage
+## CLI Usage
 
 ### Initialize Vault
 ```bash
@@ -125,9 +84,7 @@ pman list --mpw <MASTER_PASSWORD>
 
 ---
 
-## 🧱 Build & Development
-
-### 1. Install Rust & Dependencies
+### Dependencies
 
 ```bash
 cargo add sqlx --features sqlite,runtime-tokio,macros,chrono
@@ -135,19 +92,19 @@ cargo add argon2 chacha20poly1305 rand clap dotenvy serde serde_json zeroize sec
 go install github.com/pressly/goose/v3/cmd/goose@latest
 ```
 
-### 2. Create `.env`
+### Create `.env`
 
 ```bash
 echo "DATABASE_URL=sqlite://./pman.db" > .env
 ```
 
-### 3. Run Goose Migration
+### Run Goose Migration
 
 ```bash
 goose -dir ./sql/schema sqlite3 ./pman.db up
 ```
 
-### 4. Run App
+### Run App
 
 ```bash
 cargo run -- <COMMAND> [OPTIONS]
@@ -159,22 +116,7 @@ target/release/pman <COMMAND>
 
 ---
 
-## 🔒 Security Notes
-
-- The DK is *never written* to disk.  
-- The sealed DK uses AEAD (ChaCha20-Poly1305) via the KEK.  
-- Each entry uses a **unique 12-byte nonce**.  
-- AEAD prevents tampering: wrong master password → decryption fails.  
-- Avoid logging secrets; zeroize sensitive buffers where possible.  
-- Future improvements:
-  - OS keychain integration  
-  - Background agent to keep DK unlocked temporarily  
-  - Auto-lock timers  
-  - Entry editing and search  
-
----
-
-## 📄 License
+## License
 
 MIT License © 2025  
 Created by Shi Hong
